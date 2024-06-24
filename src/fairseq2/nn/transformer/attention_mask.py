@@ -343,5 +343,6 @@ def _create_causal_attention_mask(
         mask.triu_(diagonal=1 - attn_window_len)
 
     mask.log_()
+    mask[mask == -torch.inf] = -10000
 
     return mask.to(dtype)

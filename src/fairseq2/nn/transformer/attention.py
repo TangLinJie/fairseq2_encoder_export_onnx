@@ -30,6 +30,7 @@ class SDPA(Module, ABC):
     def forward(
         self,
         seqs: Tensor,
+        seq_len: int,
         keys: Tensor,
         key_padding_mask: Optional[PaddingMask],
         values: Tensor,
@@ -98,6 +99,7 @@ class TorchSDPA(SDPA):
     def forward(
         self,
         seqs: Tensor,
+        # seq_len: int,
         keys: Tensor,
         key_padding_mask: Optional[PaddingMask],
         values: Tensor,
@@ -251,6 +253,7 @@ def _naive_scaled_dot_product_attention(
         m = attn_mask.materialize()
 
         # (N, H, S, S_kv) + (S, S_kv) -> (N, H, S, S_kv)
+        # print('_naive_scaled_dot_product_attention attn_weights.shape: ', attn_weights.shape)
         attn_weights = attn_weights + m
 
     if key_padding_mask is not None:
@@ -260,7 +263,8 @@ def _naive_scaled_dot_product_attention(
         m = m[:, None, None, :]
 
         # (N, H, S, S_kv) + (N, 1, 1, S_kv) -> (N. H, S, S_kv)
-        attn_weights = torch.where(m, attn_weights, -torch.inf)
+        # attn_weights = torch.where(m, attn_weights, -torch.inf)
+        attn_weights = -10000 * (1 - m.float())  + attn_weights
 
     # For numerical stability run in single precision.
     attn_weights = softmax(attn_weights, dim=-1, dtype=torch.float32)

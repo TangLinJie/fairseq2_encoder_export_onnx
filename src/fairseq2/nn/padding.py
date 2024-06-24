@@ -76,7 +76,8 @@ def to_padding_mask(seq_lens: Tensor, batch_seq_len: int) -> Tensor:
         The mask. *Shape:* :math:`(N,S)`, where :math:`N` is the batch size and
         :math:`S` is the sequence length.
     """
-    batch_size = seq_lens.size(0)
+    # batch_size = seq_lens.size(0)
+    batch_size = 1
 
     # (N, S)
     indices = torch.arange(batch_seq_len, device=seq_lens.device).expand(batch_size, -1)
@@ -113,7 +114,8 @@ def apply_padding_mask(
     for _ in range(seqs.ndim - m.ndim):
         m = m.unsqueeze(-1)
 
-    return seqs.where(m, pad_value)
+    # return seqs.where(m, pad_value)
+    return seqs * m
 
 
 def get_seqs_and_padding_mask(

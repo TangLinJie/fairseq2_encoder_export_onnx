@@ -53,6 +53,7 @@ class MultiheadAttention(Module, ABC):
     def forward(
         self,
         seqs: Tensor,
+        # seq_len: int,
         padding_mask: Optional[PaddingMask],
         keys: Tensor,
         key_padding_mask: Optional[PaddingMask],
@@ -378,6 +379,7 @@ class StandardMultiheadAttention(MultiheadAttention):
     def forward(
         self,
         seqs: Tensor,
+        # seq_len: int,
         padding_mask: Optional[PaddingMask],
         keys: Tensor,
         key_padding_mask: Optional[PaddingMask],
@@ -450,8 +452,10 @@ class StandardMultiheadAttention(MultiheadAttention):
 
         # attn:         (N, H, S, V_h)
         # attn_weights: (N, H, S, S_kv)
+        # print('StandardMultiheadAttention type(self.sdpa): ', type(self.sdpa))
         attn, attn_weights = self.sdpa(
             q,
+            # seq_len,
             k,
             key_padding_mask,
             v,
@@ -467,6 +471,8 @@ class StandardMultiheadAttention(MultiheadAttention):
         attn = attn.transpose(1, 2)
 
         if self.head_scale_weight is not None:
+            # print('StandardMultiheadAttention attn.shape ', attn.shape)
+            # print('StandardMultiheadAttention self.head_scale_weight.shape ', self.head_scale_weight.shape)
             attn = torch.einsum("nshv,h->nshv", attn, self.head_scale_weight)
 
         # (N, S, H, V_h) -> (N, S, V_proj)

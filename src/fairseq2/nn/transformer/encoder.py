@@ -48,7 +48,11 @@ class TransformerEncoder(Module, ABC):
 
     @abstractmethod
     def forward(
-        self, seqs: Tensor, padding_mask: Optional[PaddingMask]
+        self, seqs: Tensor, # padding_mask: Optional[PaddingMask]
+        seq_len: int = None,
+        # padding_mask: Optional[Tensor] = None,
+        # padding_mask_batch_seq_len:  Optional[int] = None,
+        # padding_mask_params: Optional[list] = None,
     ) -> Tuple[Tensor, Optional[PaddingMask]]:
         """
         :param seqs:
@@ -193,6 +197,7 @@ class StandardTransformerEncoder(TransformerEncoder):
             )
 
         for layer_idx, layer in enumerate(self.layers.drop_iter()):
+            # print('StandardTransformerEncoder type(self.layers ele): ', type(layer))
             seqs, padding_mask = layer(seqs, padding_mask, self_attn_mask)
 
             for hook in self._layer_output_hooks.values():

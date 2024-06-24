@@ -313,7 +313,8 @@ class Wav2Vec2FbankFeatureExtractor(SequenceFeatureExtractor):
 
             padding_mask = PaddingMask(seq_lens, batch_seq_len=seqs.size(1))
 
-        return seqs, padding_mask
+        # return seqs, padding_mask
+        return seqs
 
     def _contract_seq_lens(self, num_frames: Tensor) -> Tensor:
         num_frames = num_frames // self.stride

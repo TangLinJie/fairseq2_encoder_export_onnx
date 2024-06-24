@@ -34,7 +34,7 @@ class Seq2SeqModel(Module, ABC):
         self.target_vocab_info = target_vocab_info
 
     @abstractmethod
-    def forward(self, batch: Seq2SeqBatch) -> SequenceModelOutput:
+    def forward(self, input_tensor, input_mask, output_tensor, output_mask) -> SequenceModelOutput:
         """
         :param batch:
             The batch of sequences to process.

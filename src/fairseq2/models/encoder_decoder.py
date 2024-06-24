@@ -34,7 +34,12 @@ class EncoderDecoderModel(Seq2SeqModel):
         self.model_dim = model_dim
 
     @override
-    def forward(self, batch: Seq2SeqBatch) -> SequenceModelOutput:
+    def forward(self, input_tensor, input_mask, output_tensor, output_mask) -> SequenceModelOutput:
+        if input_mask is not None:
+            input_mask = PaddingMask(input_mask, input_mask.shape[0])
+        if output_mask is not None:
+            output_mask = PaddingMask(output_mask, output_mask.shape[0])
+        batch = Seq2SeqBatch(input_tensor, input_mask, output_tensor, output_mask)
         encoder_output, encoder_padding_mask = self.encode(
             batch.source_seqs, batch.source_padding_mask
         )

@@ -41,9 +41,12 @@ class TransformerFrontend(Module, ABC):
     def forward(
         self,
         seqs: Tensor,
-        padding_mask: Optional[PaddingMask],
-        *,
-        state_bag: Optional[IncrementalStateBag] = None,
+        # padding_mask: Optional[Tensor] = None,
+        # padding_mask_batch_seq_len:  Optional[int] = None,
+        # state_bag: Optional[int] = None,
+        padding_mask_params: Optional[list] = None,
+        # padding_mask_batch_seq_len:  Optional[int] = None,
+        state_bag: Optional[list] = None,
     ) -> Tuple[Tensor, Optional[PaddingMask]]:
         """
         :param seqs:
@@ -145,10 +148,18 @@ class TransformerEmbeddingFrontend(TransformerFrontend):
     def forward(
         self,
         seqs: Tensor,
-        padding_mask: Optional[PaddingMask],
-        *,
-        state_bag: Optional[IncrementalStateBag] = None,
+        # padding_mask: Optional[Tensor] = None,
+        # padding_mask_batch_seq_len: Optional[int] = None,
+        # state_bag: Optional[int] = None,
+        padding_mask_params: Optional[list] = None,
+        state_bag: Optional[list] = None,
     ) -> Tuple[Tensor, Optional[PaddingMask]]:
+        if padding_mask_params is not None:
+            padding_mask = PaddingMask(*padding_mask_params)
+        else:
+            padding_mask = None
+        if state_bag is not None:
+            state_bag = IncrementalStateBag(*state_bag)
         embeds = self.embed(seqs)
 
         if self.scale != 1.0:
@@ -163,7 +174,11 @@ class TransformerEmbeddingFrontend(TransformerFrontend):
         if self.dropout is not None:
             embeds = self.dropout(embeds)
 
-        return embeds, padding_mask
+        # return embeds, padding_mask
+        if padding_mask is not None:
+            return embeds, [padding_mask.seq_lens, padding_mask.batch_seq_len, padding_mask.materialized]
+        else:
+            return embeds, None
 
     def extra_repr(self) -> str:
         """:meta private:"""

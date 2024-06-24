@@ -156,6 +156,7 @@ class ConformerBlock(TransformerEncoderLayer):
 
         seqs = self.self_attn_layer_norm(seqs)
 
+        # print('ConformerBlock type(self.self_attn): ', type(self.self_attn))
         seqs = self.self_attn(
             seqs,
             padding_mask,

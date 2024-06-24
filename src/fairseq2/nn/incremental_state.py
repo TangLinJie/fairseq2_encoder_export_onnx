@@ -46,7 +46,7 @@ class IncrementalStateBag:
 
     _module_states: Dict[Module, IncrementalState]
 
-    def __init__(self, max_num_steps: int) -> None:
+    def __init__(self, max_num_steps: int, step_nr: int=0, _module_states:dict={}) -> None:
         """
         :param max_num_steps:
             The expected maximum number of steps to take.

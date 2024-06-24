@@ -122,20 +122,37 @@ class Wav2Vec2Frontend(TransformerFrontend):
     def forward(
         self,
         seqs: Tensor,
-        padding_mask: Optional[PaddingMask],
-        *,
-        state_bag: Optional[IncrementalStateBag] = None,
+        # padding_mask: Optional[PaddingMask],
+        # *,
+        # state_bag: Optional[IncrementalStateBag] = None,
+        # padding_mask: Optional[Tensor] = None,
+        # padding_mask_batch_seq_len:  Optional[int] = None,
+        # padding_mask_params: Optional[list] = None,
+        # state_bag: Optional[int] = None,
+        # state_bag: Optional[list] = None,
     ) -> Tuple[Tensor, Optional[PaddingMask]]:
-        if state_bag is not None:
-            raise ValueError(
-                "`Wav2Vec2Frontend` does not support incremental decoding."
-            )
+        # if padding_mask_params is not None:
+        #     padding_mask = PaddingMask(*padding_mask_params)
+        # else:
+        #     padding_mask = None
+        # if state_bag is not None:
+        #     state_bag = IncrementalStateBag(*state_bag)
+        # if state_bag is not None:
+        #     raise ValueError(
+        #         "`Wav2Vec2Frontend` does not support incremental decoding."
+        #     )
+        # import numpy as np
+        # np.savez('input/input.npz',input_seqs=seqs.numpy())
+        padding_mask = None
 
-        seqs, padding_mask = self.extract_features(seqs, padding_mask)
+        # seqs, padding_mask = self.extract_features(seqs, padding_mask)
+        seqs = self.extract_features(seqs, padding_mask)
 
         seqs, padding_mask, _ = self.process_features(seqs, padding_mask)
 
-        return seqs, padding_mask
+        # np.savez('output/output.npz',input_seqs=seqs.detach().numpy())
+        # return seqs, padding_mask
+        return seqs
 
     def extract_features(
         self, seqs: Tensor, padding_mask: Optional[PaddingMask]
@@ -161,11 +178,13 @@ class Wav2Vec2Frontend(TransformerFrontend):
               :math:`S_{out}` is the output sequence length.
         """
         if self.feature_extractor is not None:
-            seqs, padding_mask = self.feature_extractor(seqs, padding_mask)
+            # seqs, padding_mask = self.feature_extractor(seqs, padding_mask)
+            seqs = self.feature_extractor(seqs, padding_mask)
 
         seqs = self.post_extract_layer_norm(seqs)
 
-        return seqs, padding_mask
+        # return seqs, padding_mask
+        return seqs
 
     def process_features(
         self,

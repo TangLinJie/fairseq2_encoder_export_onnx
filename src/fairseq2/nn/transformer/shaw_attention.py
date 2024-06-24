@@ -107,13 +107,18 @@ class ShawRelativePositionSDPA(SDPA):
         attn_mask: Optional[AttentionMask] = None,
         needs_weights: bool = False,
     ) -> Tuple[Tensor, Optional[Tensor]]:
-        q_len = seqs.size(2)
+        # q_len = seqs.size(2)
+        # q_len = seqs.shape[2]
+        # N, H, q_len, K_h = seqs.shape
+        # q_len = seq_len
+        q_len = seq_len = 80 # 160 # 576 # 320 for streaming
 
         # (N, H, S, K_h) @ (N, H, K_h, S_kv) = (N, H, S, S_kv)
         attn_weights = torch.matmul(seqs, keys.transpose(-1, -2))
 
         # (S_kv, S_kv)
-        rel_indices = self._get_relative_indices(keys)
+        # print('ShawRelativePositionSDPA keys.shape: ', keys.shape)
+        rel_indices = self._get_relative_indices(keys, seq_len)
 
         # (S_kv, S_kv, K_h)
         rel_keys = self.rel_k_embed(rel_indices)
@@ -122,12 +127,16 @@ class ShawRelativePositionSDPA(SDPA):
         rel_keys = rel_keys[-q_len:]
 
         # (N, H, S, K_h) @ (S, S_kv, K_h) = (N, H, S, S_kv)
+        # print('ShawRelativePositionSDPA seqs.shape ', seqs.shape)
+        # print('ShawRelativePositionSDPA rel_keys.shape ', rel_keys.shape)
         rel_attn_weights = torch.einsum("nhsk,stk->nhst", seqs, rel_keys)
 
         # We treat `rel_attn_weights` as an attention mask to take advantage of
         # efficient SDPA implementations.
         rel_attn_weights = rel_attn_weights * (seqs.size(-1) ** -0.5)
+        # print('ShawRelativePositionSDPA seqs.size(-1): ', seqs.size(-1))
 
+        # print('ShawRelativePositionSDPA attn_mask: ', attn_mask)
         if attn_mask is None:
             mask = rel_attn_weights
         else:
@@ -135,6 +144,7 @@ class ShawRelativePositionSDPA(SDPA):
 
         attn_mask = CustomAttentionMask(mask)
 
+        # print('ShawRelativePositionSDPA type(self.inner_sdpa) ', type(self.inner_sdpa))
         attn, attn_weights = self.inner_sdpa(  # type: ignore[no-any-return]
             seqs,
             keys,
@@ -154,15 +164,18 @@ class ShawRelativePositionSDPA(SDPA):
             rel_pos_values = rel_pos_values[-q_len:]
 
             # (N, H, S, S_kv) @ (S, S_kv, V_h) = (N, H, S, V_h)
+            # print('ShawRelativePositionSDPA attn_weights.shape ', attn_weights.shape)
+            # print('ShawRelativePositionSDPA rel_pos_values.shape ', rel_pos_values.shape)
             rel_attn = torch.einsum("nhst,stv->nhsv", attn_weights, rel_pos_values)
 
             attn = attn + rel_attn
 
         return attn, attn_weights if needs_weights else None
 
-    def _get_relative_indices(self, keys: Tensor) -> Tensor:
+    def _get_relative_indices(self, keys: Tensor, seq_len: int) -> Tensor:
         # (S, 1)
-        indices = torch.arange(keys.size(2), device=keys.device).unsqueeze(0)
+        # indices = torch.arange(keys.size(2), device=keys.device).unsqueeze(0)
+        indices = torch.arange(seq_len, device=keys.device).unsqueeze(0)
 
         # (S, S)
         rel_indices = indices - indices.transpose(0, 1)

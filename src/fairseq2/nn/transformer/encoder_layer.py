@@ -44,6 +44,7 @@ class TransformerEncoderLayer(Module, ABC):
     def forward(
         self,
         seqs: Tensor,
+        # seq_len: int,
         padding_mask: Optional[PaddingMask],
         self_attn_mask: Optional[AttentionMask] = None,
     ) -> Tuple[Tensor, Optional[PaddingMask]]:
