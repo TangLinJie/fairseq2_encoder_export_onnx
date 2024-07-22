@@ -111,7 +111,7 @@ class ShawRelativePositionSDPA(SDPA):
         # q_len = seqs.shape[2]
         # N, H, q_len, K_h = seqs.shape
         # q_len = seq_len
-        q_len = seq_len = 80 # 160 # 576 # 320 for streaming
+        q_len = seq_len = 576 # 160 # 576 # 320 for streaming
 
         # (N, H, S, K_h) @ (N, H, K_h, S_kv) = (N, H, S, S_kv)
         attn_weights = torch.matmul(seqs, keys.transpose(-1, -2))
